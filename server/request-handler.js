@@ -11,6 +11,9 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+var fs = require('fs');
+var path = require('path');
+var mime = require('mime');
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -36,13 +39,29 @@ var requestHandler = function(request, response) {
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
 
-  if (request.url.indexOf('/classes/messages') === -1 && request.url.indexOf('/log') === -1){
-    statusCode = 404;
-  }
-
-  //['/classese/messages', '/log']
-
-  if (request.method === 'POST') {
+  if (request.method === 'GET' && request.url !== '/classes/messages') {
+  // default case where we load the page
+    var filepath = '.' + request.url;
+    if (filepath === './'){
+      filepath = './client/index.html';
+    } else {
+      filepath = './client' + request.url;      
+    }
+    console.log('request.url:', filepath);
+    fs.readFile(filepath, {'encoding': 'utf8'}, function(error, data) {
+      if (error) {
+        throw error;
+      } 
+      console.log(data);
+      console.log(path.basename(filepath));
+      headers['Content-Type'] = mime.lookup(path.basename(filepath));
+      console.log(headers);
+      response.writeHead(statusCode, headers);
+      response.end(data);
+    });
+  // } else if (request.url.indexOf('/classes/messages') === -1 && request.url.indexOf('/log') === -1) {
+  //  statusCode = 404;
+  } else if (request.method === 'POST') {
     statusCode = 201;
 
     request.setEncoding('utf8');
@@ -56,35 +75,35 @@ var requestHandler = function(request, response) {
       try {
         console.log(message);
         results.results.push(JSON.parse(message));
-      } catch (e) {
+      } catch (error) {
         console.log('Error in parsing POST request!');
       }
     });
+  } else {
+    // Tell the client we are sending them plain text.
+    //
+    // You will need to change this if you are sending something
+    // other than plain text, like JSON or HTML.
+    headers['Content-Type'] = 'application/json';
+
+    if (request.methods === 'OPTIONS') {
+      headers['Allow'] = 'GET, POST, PUT, DELETE, OPTIONS';
+    }
+
+    // .writeHead() writes to the request line and headers of the response,
+    // which includes the status and all headers.
+    response.writeHead(statusCode, headers);
+
+    // Make sure to always call response.end() - Node may not send
+    // anything back to the client until you do. The string you pass to
+    // response.end() will be the body of the response - i.e. what shows
+    // up in the browser.
+    //
+    // Calling .end "flushes" the response's internal buffer, forcing
+    // node to actually send all the data over to the client.
+    console.log(JSON.stringify(results));
+    response.end(JSON.stringify(results));  
   }
-
-  // Tell the client we are sending them plain text.
-  //
-  // You will need to change this if you are sending something
-  // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'application/json';
-
-  if (request.methods === 'OPTIONS') {
-    headers['Allow'] = 'GET, POST, PUT, DELETE, OPTIONS';
-  }
-
-  // .writeHead() writes to the request line and headers of the response,
-  // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
-
-  // Make sure to always call response.end() - Node may not send
-  // anything back to the client until you do. The string you pass to
-  // response.end() will be the body of the response - i.e. what shows
-  // up in the browser.
-  //
-  // Calling .end "flushes" the response's internal buffer, forcing
-  // node to actually send all the data over to the client.
-  console.log(JSON.stringify(results));
-  response.end(JSON.stringify(results));
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
