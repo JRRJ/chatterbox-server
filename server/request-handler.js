@@ -18,7 +18,10 @@ var jsonStorage = './server/storage.json';
 var jsonContent = fs.readFileSync('./server/storage.json', 'utf8');
 var results = JSON.parse(jsonContent); //{results: [ ]};
 console.log(results);
-var idNum = results.results[results.results.length-1].objectId + 1;
+var idNum = 0;
+if (results.results.length > 0) {
+  results.results[results.results.length - 1].objectId + 1;
+}
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -35,7 +38,7 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
-  console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  //console.log('Serving request type ' + request.method + ' for url ' + request.url);
   //console.log(request);
 
   // The outgoing status.
@@ -47,26 +50,30 @@ var requestHandler = function(request, response) {
   if (request.method === 'GET' && request.url.indexOf('/classes/messages') === -1) {
   // default case where we load the page
     var filepath = '.' + request.url;
-    if (filepath === './' || request.url.indexOf('/?username') !== -1 ){
+    if (filepath === './' || request.url.indexOf('/?username') !== -1 ) {
       filepath = './client/index.html';
     } else {
       filepath = './client' + request.url;      
     }
-    console.log('request.url:', filepath);
+    //console.log('request.url:', filepath);
     fs.readFile(filepath, function(error, data) {
       if (error) {
+        statusCode = 404;
         console.log(error);
         throw error;
       } 
-      console.log(data);
-      console.log(path.basename(filepath));
+      console.log('data for ', filepath, ': ', data);
+      //console.log(path.basename(filepath));
       headers['Content-Type'] = mime.lookup(path.basename(filepath));
-      console.log(headers);
+      //console.log(headers);
       response.writeHead(statusCode, headers);
-      response.end(data);
+      if (data){
+        response.end(data);
+      } else {
+        response.end();
+      }
     });
-  // } else if (request.url.indexOf('/classes/messages') === -1 && request.url.indexOf('/log') === -1) {
-  //  statusCode = 404;
+    
   } else if (request.method === 'POST') {
     statusCode = 201;
 
@@ -98,6 +105,10 @@ var requestHandler = function(request, response) {
         console.log('Error in parsing POST request!', jsonStorage);
       }
     });
+
+  } else if (request.url.indexOf('/classes/messages') === -1 && request.url.indexOf('/log') === -1) {
+    statusCode = 404;
+
   } else {
     // Tell the client we are sending them plain text.
     //
