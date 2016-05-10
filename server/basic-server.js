@@ -1,9 +1,21 @@
-var request = require('./request-handler.js');
+// var request = require('./request-handler.js');
 
 /* Import node's http module: */
-var http = require('http');
+//var http = require('http');
 
-
+var express = require('express');
+var fs = require('fs');
+var bodyParser = require('body-parser');
+var server = express();
+var jsonContent = JSON.parse(fs.readFileSync('./server/storage.json', 'utf8'));
+var idNum = 0;
+if (jsonContent.results.length > 0) {
+  idNum = jsonContent.results[jsonContent.results.length - 1].objectId + 1;
+}
+// console.log(__dirname + '/../client');
+// console.log('/Users/student/Desktop/2016-04-chatterbox-server/client');
+server.use(express.static('/Users/student/Desktop/2016-04-chatterbox-server/client'));
+var jsonParser = bodyParser.json();
 // Every server needs to listen on a port with a unique number. The
 // standard port for HTTP servers is port 80, but that port is
 // normally already claimed by another server and/or not accessible
@@ -17,16 +29,41 @@ var port = 3000;
 var ip = '127.0.0.1';
 
 
+server.get('/classes/messages', function(req, res) {
+  console.log('GET for /classes/messages');
+  //jsonContent.results.push()
+  res.status(200).json(jsonContent);
+});
 
+server.post('/classes/messages', jsonParser, function(req, res) {
+  console.log('POST activated', req.body);
+  var message = req.body;
+  message.objectId = idNum;
+  idNum += 1;
+  jsonContent.results.push(message);
+  fs.writeFile('./server/storage.json', JSON.stringify(jsonContent, null, 2), function(error) {
+    if (error) {
+      console.log(error);
+    }
+  });
+  res.status(201).json(req.body);
+});
 // We use node's http module to create a server.
 //
 // The function we pass to http.createServer will be used to handle all
 // incoming requests.
 //
 // After creating the server, we will tell it to listen on the given port and IP. */
-var server = http.createServer(request.requestHandler);
-console.log('Listening on http://' + ip + ':' + port);
-server.listen(port, ip);
+
+
+// var server = http.createServer(request.requestHandler);
+// console.log('Listening on http://' + ip + ':' + port);
+//server.listen(port, ip);
+
+server.listen(port, function() {
+  console.log('Listening on http://' + ip + ':' + port);
+});
+
 
 // To start this server, run:
 //
