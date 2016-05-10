@@ -14,6 +14,11 @@ this file and include it in basic-server.js so that it actually works.
 var fs = require('fs');
 var path = require('path');
 var mime = require('mime');
+var jsonStorage = './server/storage.json';
+var jsonContent = fs.readFileSync('./server/storage.json', 'utf8');
+var results = JSON.parse(jsonContent); //{results: [ ]};
+console.log(results);
+var idNum = results.results[results.results.length-1].objectId + 1;
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -39,17 +44,18 @@ var requestHandler = function(request, response) {
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
 
-  if (request.method === 'GET' && request.url !== '/classes/messages') {
+  if (request.method === 'GET' && request.url.indexOf('/classes/messages') === -1) {
   // default case where we load the page
     var filepath = '.' + request.url;
-    if (filepath === './'){
+    if (filepath === './' || request.url.indexOf('/?username') !== -1 ){
       filepath = './client/index.html';
     } else {
       filepath = './client' + request.url;      
     }
     console.log('request.url:', filepath);
-    fs.readFile(filepath, {'encoding': 'utf8'}, function(error, data) {
+    fs.readFile(filepath, function(error, data) {
       if (error) {
+        console.log(error);
         throw error;
       } 
       console.log(data);
@@ -74,9 +80,22 @@ var requestHandler = function(request, response) {
     request.on('end', function() {
       try {
         console.log(message);
-        results.results.push(JSON.parse(message));
+        var mesObject = JSON.parse(message);
+        mesObject.objectId = idNum;
+        idNum += 1;
+        results.results.push(mesObject);
+        headers['Content-Type'] = 'application/json';
+        response.writeHead(statusCode, headers);
+        response.end(JSON.stringify(results));   
+        console.log(results);
+        //fs.writeFileSync('./storage.js', JSON.stringify(results));
+        fs.writeFile(jsonStorage, JSON.stringify(results, null, 2), function(error) {
+          if (error) {
+            console.log(error);
+          }
+        });
       } catch (error) {
-        console.log('Error in parsing POST request!');
+        console.log('Error in parsing POST request!', jsonStorage);
       }
     });
   } else {
@@ -122,7 +141,8 @@ var defaultCorsHeaders = {
   'access-control-max-age': 10 // Seconds.
 };
 
-var results = {results: [ ]};
+//var results = {results: [ ]};
+
 
 exports.requestHandler = requestHandler;
 exports.defaultCorsHeaders = defaultCorsHeaders;

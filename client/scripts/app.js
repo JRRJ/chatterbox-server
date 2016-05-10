@@ -12,6 +12,15 @@ var app = {
 
   init: function() {
     // Get username
+    if (!/(&|\?)username=/.test(window.location.search)) {
+      var newSearch = window.location.search;
+      if (newSearch !== '' & newSearch !== '?') {
+        newSearch += '&';
+      }
+      newSearch += 'username=' + (prompt('What is your name?') || 'anonymous');
+      window.location.search = newSearch;
+    }
+
     app.username = window.location.search.substr(10);
 
     // Cache jQuery selectors
@@ -61,13 +70,13 @@ var app = {
       contentType: 'application/json',
       data: { order: '-createdAt'},
       success: function(data) {
+        app.stopSpinner();
         // Don't bother if we have nothing to work with
         if (!data.results || !data.results.length) { return; }
-
+        console.log(data);
         // Get the last message
         var mostRecentMessage = data.results[data.results.length - 1];
         var displayedRoom = $('.chat span').first().data('roomname');
-        app.stopSpinner();
         // Only bother updating the DOM if we have a new message
         if (mostRecentMessage.objectId !== app.lastMessageId || app.roomname !== displayedRoom) {
           // Update the UI with the fetched rooms
@@ -92,7 +101,7 @@ var app = {
 
   populateMessages: function(results, animate) {
     // Clear existing messages
-
+    console.log('populateMessages');
     app.clearMessages();
     app.stopSpinner();
     if (Array.isArray(results)) {
