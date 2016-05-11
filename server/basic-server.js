@@ -30,13 +30,7 @@ var port = process.env.PORT || 3000;
 // special address that always refers to localhost.
 var ip = '127.0.0.1';
 
-app.use(function(req, res, next) {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'content-type, accept');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Max-Age', 10); // Seconds.
-  next();
-});
+//
 
 server.get('/classes/messages', function(req, res) {
   //console.log('GET for /classes/messages');
