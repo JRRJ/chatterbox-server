@@ -4,7 +4,7 @@ var app = {
   //TODO: The current 'toggleFriend' function just toggles the class 'friend'
   //to all messages sent by the user
 
-  server: 'http://guarded-meadow-17986.herokuapp.com',
+  server: 'http://guarded-meadow-17986.herokuapp.com/classes/messages',
   username: 'anonymous',
   roomname: 'lobby',
   lastMessageId: 0,
