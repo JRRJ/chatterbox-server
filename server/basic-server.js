@@ -4,6 +4,7 @@
 //var http = require('http');
 
 var express = require('express');
+var path = require('path');
 var fs = require('fs');
 var bodyParser = require('body-parser');
 var server = express();
@@ -13,8 +14,9 @@ if (jsonContent.results.length > 0) {
   idNum = jsonContent.results[jsonContent.results.length - 1].objectId + 1;
 }
 // console.log(__dirname + '/../client');
-// console.log('/Users/student/Desktop/2016-04-chatterbox-server/client');
-server.use(express.static('/Users/student/Desktop/2016-04-chatterbox-server/client'));
+// console.log('/Users/student/Desktop/2016-04-chatterbox-server/client')
+console.log(path.dirname(__dirname)+ '/client');
+server.use(express.static(path.dirname(__dirname)+ '/client'));
 var jsonParser = bodyParser.json();
 // Every server needs to listen on a port with a unique number. The
 // standard port for HTTP servers is port 80, but that port is
@@ -30,13 +32,13 @@ var ip = '127.0.0.1';
 
 
 server.get('/classes/messages', function(req, res) {
-  console.log('GET for /classes/messages');
+  //console.log('GET for /classes/messages');
   //jsonContent.results.push()
   res.status(200).json(jsonContent);
 });
 
 server.post('/classes/messages', jsonParser, function(req, res) {
-  console.log('POST activated', req.body);
+  //console.log('POST activated', req.body);
   var message = req.body;
   message.objectId = idNum;
   idNum += 1;
