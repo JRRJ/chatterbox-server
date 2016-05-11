@@ -29,6 +29,12 @@
       "text": "one more test",
       "roomname": "lobby",
       "objectId": 4
+    },
+    {
+      "username": "John",
+      "text": "New Message!",
+      "roomname": "lobby",
+      "objectId": 5
     }
   ]
 }
